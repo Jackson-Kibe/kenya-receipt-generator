@@ -42,113 +42,125 @@ const generateReceiptPage = async (pdf: jsPDF, receipt: ReceiptData): Promise<vo
     pdf.text(text, x, y);
   };
   
-  // Bolt logo background (green rectangle)
-  pdf.setFillColor(34, 197, 94); // Bolt green
-  pdf.rect(margin, yPosition - 15, 40, 20, 'F');
+  // Bolt logo with modern styling
+  pdf.setFillColor(52, 211, 153); // Bolt green
+  pdf.roundedRect(margin, yPosition - 15, 45, 22, 3, 3, 'F');
   
-  // Bolt text in white
-  addText('Bolt', margin + 8, yPosition - 2, 18, 'bold', [255, 255, 255]);
+  // Bolt text with better typography
+  addText('Bolt', margin + 12, yPosition - 2, 20, 'bold', [255, 255, 255]);
+  
+  // Add small dot after Bolt (characteristic of the logo)
+  pdf.setFillColor(255, 255, 255);
+  pdf.circle(margin + 38, yPosition + 1, 1.5, 'F');
   
   // Invoice number and date in top right
   pdf.setTextColor(0, 0, 0);
-  addText(`Invoice no. ${receipt.invoiceNumber}`, pageWidth - margin - 80, yPosition - 5, 10, 'bold');
-  addText(`Date: ${receipt.date}`, pageWidth - margin - 80, yPosition + 5, 9);
+  addText(`Invoice no. ${receipt.invoiceNumber}`, pageWidth - margin - 60, yPosition - 8, 11, 'bold');
+  addText(`Date: ${receipt.date}`, pageWidth - margin - 60, yPosition + 2, 10);
   
   yPosition += 30;
   
-  // Recipient section
-  addText('Recipient:', margin, yPosition, 10, 'bold');
+  // Recipient section with better spacing
+  addText('Recipient:', margin, yPosition, 11, 'bold');
+  yPosition += 10;
+  addText(receipt.recipient, margin, yPosition, 11);
+  
+  // Location on the right side with better alignment
+  addText(receipt.location, pageWidth - margin - 60, yPosition, 10);
+  yPosition += 25;
+  
+  // Start location and time with better formatting
+  addText(`Start: ${receipt.startLocation}`, margin, yPosition, 10);
   yPosition += 8;
-  addText(receipt.recipient, margin, yPosition, 10);
+  addText(`${receipt.date} ${receipt.time}`, margin, yPosition, 9, 'normal', [128, 128, 128]);
+  yPosition += 25;
   
-  // Location on the right side
-  addText(receipt.location, pageWidth - margin - 80, yPosition, 9);
-  yPosition += 20;
-  
-  // Start location and time
-  addText(`Start: ${receipt.startLocation} (${receipt.date} ${receipt.time})`, margin, yPosition, 9);
-  yPosition += 30;
-  
-  // Table setup
+  // Enhanced table setup
   const tableStartY = yPosition;
   const tableWidth = pageWidth - 2 * margin;
-  const tableHeight = 40;
-  const rowHeight = 12;
+  const tableHeight = 45;
+  const headerHeight = 14;
+  const rowHeight = 31;
   
-  // Table border
-  pdf.setLineWidth(0.5);
-  pdf.setDrawColor(0, 0, 0);
+  // Table border with cleaner lines
+  pdf.setLineWidth(0.3);
+  pdf.setDrawColor(200, 200, 200);
   pdf.rect(margin, tableStartY, tableWidth, tableHeight);
   
   // Header row background
-  pdf.setFillColor(240, 240, 240);
-  pdf.rect(margin, tableStartY, tableWidth, rowHeight, 'F');
+  pdf.setFillColor(248, 248, 248);
+  pdf.rect(margin, tableStartY, tableWidth, headerHeight, 'F');
   
-  // Column positions
-  const col1X = margin + 5;
-  const col2X = margin + 80;
-  const col3X = margin + 120;
-  const col4X = margin + 150;
+  // Improved column positions for better spacing
+  const col1X = margin + 8;
+  const col2X = margin + 85;
+  const col3X = margin + 125;
+  const col4X = margin + 155;
   
-  // Vertical lines
-  pdf.line(margin + 75, tableStartY, margin + 75, tableStartY + tableHeight);
-  pdf.line(margin + 115, tableStartY, margin + 115, tableStartY + tableHeight);
-  pdf.line(margin + 145, tableStartY, margin + 145, tableStartY + tableHeight);
+  // Vertical lines with consistent spacing
+  pdf.line(margin + 80, tableStartY, margin + 80, tableStartY + tableHeight);
+  pdf.line(margin + 120, tableStartY, margin + 120, tableStartY + tableHeight);
+  pdf.line(margin + 150, tableStartY, margin + 150, tableStartY + tableHeight);
   
-  // Header text
-  addText('Title', col1X, tableStartY + 8, 9, 'bold');
-  addText('Sum (KES)', col2X, tableStartY + 8, 9, 'bold');
-  addText('VAT 0%', col3X, tableStartY + 8, 9, 'bold');
-  addText('Total sum (KES)', col4X, tableStartY + 8, 9, 'bold');
+  // Header text with better typography
+  addText('Title', col1X, tableStartY + 9, 10, 'bold');
+  addText('Sum (KES)', col2X, tableStartY + 9, 10, 'bold');
+  addText('VAT 0%', col3X, tableStartY + 9, 10, 'bold');
+  addText('Total sum (KES)', col4X, tableStartY + 9, 10, 'bold');
   
   // Horizontal line under header
-  pdf.line(margin, tableStartY + rowHeight, pageWidth - margin, tableStartY + rowHeight);
+  pdf.setDrawColor(220, 220, 220);
+  pdf.line(margin, tableStartY + headerHeight, pageWidth - margin, tableStartY + headerHeight);
   
-  // Data row
-  addText('Trip Fee', col1X, tableStartY + 24, 9);
-  addText(receipt.tripFee.toFixed(2), col2X, tableStartY + 24, 9);
-  addText('0.00', col3X, tableStartY + 24, 9);
-  addText(receipt.tripFee.toFixed(2), col4X, tableStartY + 24, 9);
+  // Data row with better alignment
+  const dataY = tableStartY + headerHeight + 12;
+  addText('Trip Fee', col1X, dataY, 10);
+  addText(receipt.tripFee.toFixed(2), col2X, dataY, 10);
+  addText('0.00', col3X, dataY, 10);
+  addText(receipt.tripFee.toFixed(2), col4X, dataY, 10);
   
-  yPosition = tableStartY + tableHeight + 20;
+  yPosition = tableStartY + tableHeight + 25;
   
-  // Summary section (right aligned)
-  const summaryX = pageWidth - margin - 80;
-  addText(`Total (KES):`, summaryX - 20, yPosition, 10);
-  addText(receipt.tripFee.toFixed(2), summaryX + 20, yPosition, 10);
-  yPosition += 8;
-  addText(`VAT 0%:`, summaryX - 20, yPosition, 10);
-  addText('0.00', summaryX + 20, yPosition, 10);
-  yPosition += 8;
-  addText(`Total including VAT (KES):`, summaryX - 20, yPosition, 10, 'bold');
-  addText(receipt.total.toFixed(2), summaryX + 20, yPosition, 10, 'bold');
+  // Enhanced summary section (right aligned)
+  const summaryX = pageWidth - margin - 70;
+  const labelX = summaryX - 35;
+  
+  addText('Total (KES):', labelX, yPosition, 11);
+  addText(receipt.tripFee.toFixed(2), summaryX, yPosition, 11);
+  yPosition += 10;
+  
+  addText('VAT 0%:', labelX, yPosition, 11);
+  addText('0.00', summaryX, yPosition, 11);
+  yPosition += 10;
+  
+  // Total line with emphasis
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.5);
+  pdf.line(labelX - 5, yPosition - 2, summaryX + 25, yPosition - 2);
+  
+  addText('Total including VAT (KES):', labelX, yPosition + 5, 12, 'bold');
+  addText(receipt.total.toFixed(2), summaryX, yPosition + 5, 12, 'bold');
+  yPosition += 25;
+  
+  // Enhanced payment information section
+  addText(`Payment reference: KES${receipt.tripFee.toFixed(2)}`, margin, yPosition, 10);
+  addText(`Amount: -${receipt.tripFee.toFixed(2)}`, margin + 80, yPosition, 10);
   yPosition += 20;
   
-  // Payment information
-  addText(`Paid by KES${receipt.tripFee.toFixed(2)}KES7569:`, margin, yPosition, 9);
-  addText(`-${receipt.tripFee.toFixed(2)}`, margin + 80, yPosition, 9);
-  yPosition += 15;
+  // Payment method section with better styling
+  addText('Payment Method:', margin, yPosition, 11, 'bold');
+  yPosition += 12;
   
-  // Payment method with visual indicators
-  addText('Charged', margin, yPosition, 9, 'bold');
+  // Payment status indicators
+  addText('● Charged', margin, yPosition, 10, 'normal', [220, 38, 127]); // Pink for charged
+  addText('○ Cash', margin + 60, yPosition, 10, 'normal', [34, 197, 94]); // Green for cash
   
-  // Add red dot for charged
-  pdf.setFillColor(255, 0, 0);
-  pdf.circle(margin + 35, yPosition - 2, 1.5, 'F');
+  yPosition += 20;
   
-  addText('Cash', margin + 60, yPosition, 9, 'bold');
-  
-  // Payment method icons (simplified rectangles with text)
-  pdf.setFillColor(220, 220, 220);
-  pdf.rect(margin + 90, yPosition - 6, 20, 8, 'F');
-  pdf.rect(margin + 115, yPosition - 6, 20, 8, 'F');
-  
-  // Add card and cash symbols
-  pdf.setTextColor(0, 0, 0);
-  addText('💳', margin + 95, yPosition, 8);
-  addText('💰', margin + 120, yPosition, 8);
-  
-  yPosition += 30;
+  // Footer information
+  pdf.setTextColor(128, 128, 128);
+  addText('Thank you for choosing Bolt!', margin, yPosition, 9);
+  addText('For support, visit bolt.eu/support', pageWidth - margin - 80, yPosition, 9);
   
   // Reset text color for any additional content
   pdf.setTextColor(0, 0, 0);

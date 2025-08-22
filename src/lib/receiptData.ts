@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 interface TripData {
   date: string;
   time: string;
+  destination: string;
 }
 
 interface ReceiptData {
@@ -86,7 +87,7 @@ export const generateReceiptData = (
     tripDate.setHours(parseInt(hours), parseInt(minutes));
     
     const recipient = getRandomItem(kenyanNames);
-    const location = getRandomItem(nairobiLocations);
+    const location = trip.destination || getRandomItem(nairobiLocations);
     const startLocation = getRandomItem(nairobiLocations.filter(loc => loc !== location));
     
     return {
@@ -94,7 +95,7 @@ export const generateReceiptData = (
       date: format(tripDate, 'yyyy-MM-dd'),
       time: format(tripDate, 'HH:mm'),
       recipient,
-      location: `${location}, Nairobi`,
+      location: location.includes('Nairobi') ? location : `${location}, Nairobi`,
       startLocation: `${startLocation}, Nairobi`,
       tripFee: tripFees[index],
       vat: 0, // Always 0% as specified

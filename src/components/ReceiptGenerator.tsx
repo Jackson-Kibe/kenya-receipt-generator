@@ -12,19 +12,20 @@ import { generateReceiptData } from '@/lib/receiptData';
 interface TripData {
   date: string;
   time: string;
+  destination: string;
 }
 
 const ReceiptGenerator = () => {
   const [numberOfTrips, setNumberOfTrips] = useState(1);
   const [totalPrice, setTotalPrice] = useState('');
-  const [trips, setTrips] = useState<TripData[]>([{ date: '', time: '' }]);
+  const [trips, setTrips] = useState<TripData[]>([{ date: '', time: '', destination: '' }]);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const handleTripsChange = (value: number) => {
     setNumberOfTrips(value);
     const newTrips = Array.from({ length: value }, (_, i) => 
-      trips[i] || { date: '', time: '' }
+      trips[i] || { date: '', time: '', destination: '' }
     );
     setTrips(newTrips);
   };
@@ -37,7 +38,7 @@ const ReceiptGenerator = () => {
 
   const addTrip = () => {
     setNumberOfTrips(prev => prev + 1);
-    setTrips(prev => [...prev, { date: '', time: '' }]);
+    setTrips(prev => [...prev, { date: '', time: '', destination: '' }]);
   };
 
   const removeTrip = (index: number) => {
@@ -48,7 +49,7 @@ const ReceiptGenerator = () => {
   };
 
   const handleGenerate = async () => {
-    if (!totalPrice || trips.some(trip => !trip.date || !trip.time)) {
+    if (!totalPrice || trips.some(trip => !trip.date || !trip.time || !trip.destination)) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields before generating receipts.",
@@ -160,7 +161,7 @@ const ReceiptGenerator = () => {
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {trips.map((trip, index) => (
                   <div key={index} className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 border border-bolt-green/10">
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div className="space-y-2">
                         <Label className="text-xs font-medium text-bolt-text-muted">
                           Date for Trip {index + 1}
@@ -180,6 +181,18 @@ const ReceiptGenerator = () => {
                           type="time"
                           value={trip.time}
                           onChange={(e) => updateTrip(index, 'time', e.target.value)}
+                          className="text-sm border-bolt-green/20 focus:border-bolt-green focus:ring-bolt-green"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-bolt-text-muted">
+                          Destination for Trip {index + 1}
+                        </Label>
+                        <Input
+                          type="text"
+                          placeholder="e.g., Westlands, Nairobi"
+                          value={trip.destination}
+                          onChange={(e) => updateTrip(index, 'destination', e.target.value)}
                           className="text-sm border-bolt-green/20 focus:border-bolt-green focus:ring-bolt-green"
                         />
                       </div>

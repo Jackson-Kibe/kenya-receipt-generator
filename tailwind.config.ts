@@ -26,7 +26,8 @@ export default {
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					foreground: 'hsl(var(--primary-foreground))',
+					hover: 'hsl(var(--primary-hover))'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -51,6 +52,15 @@ export default {
 				card: {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
+				},
+				'bolt-green': {
+					DEFAULT: 'hsl(var(--bolt-green))',
+					light: 'hsl(var(--bolt-green-light))',
+					dark: 'hsl(var(--bolt-green-dark))'
+				},
+				'bolt-text': {
+					DEFAULT: 'hsl(var(--bolt-text))',
+					muted: 'hsl(var(--bolt-text-muted))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

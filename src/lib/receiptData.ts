@@ -11,6 +11,8 @@ interface ReceiptData {
   date: string;
   time: string;
   recipient: string;
+  driverName: string;
+  driverCity: string;
   location: string;
   startLocation: string;
   tripFee: number;
@@ -87,14 +89,20 @@ export const generateReceiptData = (
     tripDate.setHours(parseInt(hours), parseInt(minutes));
     
     const recipient = getRandomItem(kenyanNames);
+    const driverName = getRandomItem(kenyanNames.filter(name => name !== recipient));
     const location = trip.destination || getRandomItem(nairobiLocations);
     const startLocation = getRandomItem(nairobiLocations.filter(loc => loc !== location));
+    const city = location.includes(',')
+      ? (location.split(',').pop() || 'Nairobi').trim()
+      : 'Nairobi';
     
     return {
       invoiceNumber: generateInvoiceNumber(),
       date: format(tripDate, 'yyyy-MM-dd'),
       time: format(tripDate, 'HH:mm'),
       recipient,
+      driverName,
+      driverCity: city,
       location: location.includes('Nairobi') ? location : `${location}, Nairobi`,
       startLocation: `${startLocation}, Nairobi`,
       tripFee: tripFees[index],

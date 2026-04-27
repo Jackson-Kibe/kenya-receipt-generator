@@ -13,19 +13,23 @@ interface TripData {
   date: string;
   time: string;
   destination: string;
+  driverLocation: string;
 }
 
 const ReceiptGenerator = () => {
   const [numberOfTrips, setNumberOfTrips] = useState(1);
+  const [recipientName, setRecipientName] = useState('');
   const [totalPrice, setTotalPrice] = useState('');
-  const [trips, setTrips] = useState<TripData[]>([{ date: '', time: '', destination: '' }]);
+  const [trips, setTrips] = useState<TripData[]>([
+    { date: '', time: '', destination: '', driverLocation: '' },
+  ]);
   const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const handleTripsChange = (value: number) => {
     setNumberOfTrips(value);
     const newTrips = Array.from({ length: value }, (_, i) => 
-      trips[i] || { date: '', time: '', destination: '' }
+      trips[i] || { date: '', time: '', destination: '', driverLocation: '' }
     );
     setTrips(newTrips);
   };
@@ -38,7 +42,7 @@ const ReceiptGenerator = () => {
 
   const addTrip = () => {
     setNumberOfTrips(prev => prev + 1);
-    setTrips(prev => [...prev, { date: '', time: '', destination: '' }]);
+    setTrips(prev => [...prev, { date: '', time: '', destination: '', driverLocation: '' }]);
   };
 
   const removeTrip = (index: number) => {
@@ -49,10 +53,42 @@ const ReceiptGenerator = () => {
   };
 
   const handleGenerate = async () => {
-    if (!totalPrice || trips.some(trip => !trip.date || !trip.time || !trip.destination)) {
+    if (
+      !recipientName.trim() ||
+      !totalPrice ||
+      trips.some(trip => !trip.date || !trip.time || !trip.destination || !trip.driverLocation)
+    ) {
       toast({
         title: "Missing Information",
         description: "Please fill in all fields before generating receipts.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const parsedTotalPrice = Number(totalPrice);
+    if (!Number.isFinite(parsedTotalPrice) || !Number.isInteger(parsedTotalPrice)) {
+      toast({
+        title: "Invalid Total Price",
+        description: "Total price must be a whole number so all generated amounts end with .00.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (parsedTotalPrice % 5 !== 0) {
+      toast({
+        title: "Invalid Total Price",
+        description: "Total price must be in increments of 5 (or 10), e.g. 850, 930, 1220.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (parsedTotalPrice < numberOfTrips * 5) {
+      toast({
+        title: "Invalid Total Price",
+        description: `For ${numberOfTrips} trip(s), total price must be at least ${numberOfTrips * 5} KES.`,
         variant: "destructive"
       });
       return;
@@ -62,8 +98,9 @@ const ReceiptGenerator = () => {
     try {
       const receiptData = generateReceiptData(
         numberOfTrips,
-        parseFloat(totalPrice),
-        trips
+        parsedTotalPrice,
+        trips,
+        recipientName.trim()
       );
       
       await generatePDF(receiptData);
@@ -108,7 +145,7 @@ const ReceiptGenerator = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="trips" className="text-sm font-medium text-bolt-text">
                   Number of Trips
@@ -126,16 +163,30 @@ const ReceiptGenerator = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="total" className="text-sm font-medium text-bolt-text">
-                  Total Price (KES)
+                  Total Price (KES, increments of 5)
                 </Label>
                 <Input
                   id="total"
                   type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="e.g., 930.00"
+                  step="5"
+                  min="5"
+                  placeholder="e.g., 930"
                   value={totalPrice}
                   onChange={(e) => setTotalPrice(e.target.value)}
+                  className="border-bolt-green/20 focus:border-bolt-green focus:ring-bolt-green"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="recipient" className="text-sm font-medium text-bolt-text">
+                  Recipient Name
+                </Label>
+                <Input
+                  id="recipient"
+                  type="text"
+                  placeholder="e.g., Esther Moraa"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
                   className="border-bolt-green/20 focus:border-bolt-green focus:ring-bolt-green"
                 />
               </div>
@@ -161,7 +212,7 @@ const ReceiptGenerator = () => {
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {trips.map((trip, index) => (
                   <div key={index} className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 border border-bolt-green/10">
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-3">
                       <div className="space-y-2">
                         <Label className="text-xs font-medium text-bolt-text-muted">
                           Date for Trip {index + 1}
@@ -190,9 +241,21 @@ const ReceiptGenerator = () => {
                         </Label>
                         <Input
                           type="text"
-                          placeholder="e.g., Westlands, Nairobi"
+                          placeholder="e.g., Kilimani, Kenya"
                           value={trip.destination}
                           onChange={(e) => updateTrip(index, 'destination', e.target.value)}
+                          className="text-sm border-bolt-green/20 focus:border-bolt-green focus:ring-bolt-green"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium text-bolt-text-muted">
+                          Driver Location for Trip {index + 1}
+                        </Label>
+                        <Input
+                          type="text"
+                          placeholder="e.g., Naivasha, Kenya"
+                          value={trip.driverLocation}
+                          onChange={(e) => updateTrip(index, 'driverLocation', e.target.value)}
                           className="text-sm border-bolt-green/20 focus:border-bolt-green focus:ring-bolt-green"
                         />
                       </div>

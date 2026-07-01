@@ -11,9 +11,11 @@ interface ReceiptData {
   location: string;
   startLocation: string;
   tripFee: number;
+  bookingFee: number;
   vat: number;
   total: number;
   paymentMethod: string;
+  currency: 'KES' | 'TZS';
 }
 
 type ReceiptTextAlign = 'left' | 'center' | 'right';
@@ -221,7 +223,10 @@ const generateReceiptPage = (
   };
 
   const tripFee = receipt.tripFee.toFixed(2);
+  const bookingFee = receipt.bookingFee.toFixed(2);
   const total = receipt.total.toFixed(2);
+  const currency = receipt.currency;
+  const hasBookingFee = receipt.bookingFee > 0;
 
   pdf.setTextColor(0, 0, 0);
 
@@ -270,8 +275,9 @@ const generateReceiptPage = (
   const tableLeft = 34.125;
   const tableTop = 247.875;
   const tableWidth = 543.75;
-  const tableHeight = 42;
+  const tableHeight = hasBookingFee ? 63 : 42;
   const headerSplitY = 268.875;
+  const firstRowSplitY = 289.875;
   const colOneSplitX = 306.375;
   const colTwoSplitX = 387.375;
   const colThreeSplitX = 468.375;
@@ -280,15 +286,18 @@ const generateReceiptPage = (
   pdf.setLineWidth(0.75);
   pdf.rect(tableLeft, tableTop, tableWidth, tableHeight);
   pdf.line(tableLeft, headerSplitY, tableLeft + tableWidth, headerSplitY);
+  if (hasBookingFee) {
+    pdf.line(tableLeft, firstRowSplitY, tableLeft + tableWidth, firstRowSplitY);
+  }
   pdf.line(colOneSplitX, tableTop, colOneSplitX, tableTop + tableHeight);
   pdf.line(colTwoSplitX, tableTop, colTwoSplitX, tableTop + tableHeight);
   pdf.line(colThreeSplitX, tableTop, colThreeSplitX, tableTop + tableHeight);
 
   drawText({ text: 'Title', x: 170.06, y: 251.28, style: 'bold', align: 'center' });
-  drawText({ text: 'Sum (KES)', x: 346.78, y: 251.28, style: 'bold', align: 'center' });
+  drawText({ text: `Sum (${currency})`, x: 346.78, y: 251.28, style: 'bold', align: 'center' });
   drawText({ text: 'VAT 0%', x: 428.35, y: 251.28, style: 'bold', align: 'center' });
   drawText({
-    text: 'Total sum (KES)',
+    text: `Total sum (${currency})`,
     x: 523.5,
     y: 251.28,
     style: 'bold',
@@ -300,23 +309,33 @@ const generateReceiptPage = (
   drawText({ text: '0.00', x: 462.75, y: 272.28, align: 'right' });
   drawText({ text: tripFee, x: 571.49, y: 272.28, style: 'bold', align: 'right' });
 
-  drawText({ text: 'Total (KES):', x: 416.45, y: 317.28 });
-  drawText({ text: tripFee, x: 572.25, y: 317.28, align: 'right' });
-  drawText({ text: 'VAT 0%:', x: 432.28, y: 334.53 });
-  drawText({ text: '0.00', x: 572.25, y: 334.53, align: 'right' });
+  if (hasBookingFee) {
+    drawText({ text: 'Booking Fee', x: 40.5, y: 293.28 });
+    drawText({ text: bookingFee, x: 381.18, y: 293.28, align: 'right' });
+    drawText({ text: '0.00', x: 462.75, y: 293.28, align: 'right' });
+    drawText({ text: bookingFee, x: 571.49, y: 293.28, style: 'bold', align: 'right' });
+  }
+
+  const summaryTop = hasBookingFee ? 336.03 : 317.28;
+  drawText({ text: `Total (${currency}):`, x: 416.45, y: summaryTop });
+  drawText({ text: total, x: 572.25, y: summaryTop, align: 'right' });
+  drawText({ text: 'VAT 0%:', x: 432.28, y: summaryTop + 17.25 });
+  drawText({ text: '0.00', x: 572.25, y: summaryTop + 17.25, align: 'right' });
 
   drawText({
-    text: 'Total including VAT (KES):',
+    text: `Total including VAT (${currency}):`,
     x: 339.38,
-    y: 351.78,
+    y: summaryTop + 34.5,
     style: 'bold',
   });
-  drawText({ text: total, x: 572.25, y: 351.78, style: 'bold', align: 'right' });
+  drawText({ text: total, x: 572.25, y: summaryTop + 34.5, style: 'bold', align: 'right' });
 
-  drawText({ text: 'Charged', x: 364.58, y: 394.06, style: 'bold' });
-  if (paymentIconImage) {
-    pdf.addImage(paymentIconImage, 'PNG', 414, 386.25, 22.5, 21.75);
+  if (!hasBookingFee) {
+    drawText({ text: 'Charged', x: 364.58, y: 394.06, style: 'bold' });
+    if (paymentIconImage) {
+      pdf.addImage(paymentIconImage, 'PNG', 414, 386.25, 22.5, 21.75);
+    }
+    drawText({ text: 'Cash:', x: 442.1, y: 394.06, style: 'bold' });
+    drawText({ text: total, x: 572.25, y: 390.03, style: 'bold', align: 'right' });
   }
-  drawText({ text: 'Cash:', x: 442.1, y: 394.06, style: 'bold' });
-  drawText({ text: total, x: 572.25, y: 390.03, style: 'bold', align: 'right' });
 };

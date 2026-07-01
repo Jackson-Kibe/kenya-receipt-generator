@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, FileText, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { generatePDF } from '@/lib/pdfGenerator';
@@ -16,10 +17,13 @@ interface TripData {
   driverLocation: string;
 }
 
+type CurrencyCode = 'KES' | 'TZS';
+
 const ReceiptGenerator = () => {
   const [numberOfTrips, setNumberOfTrips] = useState(1);
   const [recipientName, setRecipientName] = useState('');
   const [totalPrice, setTotalPrice] = useState('');
+  const [currency, setCurrency] = useState<CurrencyCode>('KES');
   const [trips, setTrips] = useState<TripData[]>([
     { date: '', time: '', destination: '', driverLocation: '' },
   ]);
@@ -88,7 +92,7 @@ const ReceiptGenerator = () => {
     if (parsedTotalPrice < numberOfTrips * 5) {
       toast({
         title: "Invalid Total Price",
-        description: `For ${numberOfTrips} trip(s), total price must be at least ${numberOfTrips * 5} KES.`,
+        description: `For ${numberOfTrips} trip(s), total price must be at least ${numberOfTrips * 5} ${currency}.`,
         variant: "destructive"
       });
       return;
@@ -100,7 +104,8 @@ const ReceiptGenerator = () => {
         numberOfTrips,
         parsedTotalPrice,
         trips,
-        recipientName.trim()
+        recipientName.trim(),
+        currency
       );
       
       await generatePDF(receiptData);
@@ -145,7 +150,7 @@ const ReceiptGenerator = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="trips" className="text-sm font-medium text-bolt-text">
                   Number of Trips
@@ -163,7 +168,7 @@ const ReceiptGenerator = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="total" className="text-sm font-medium text-bolt-text">
-                  Total Price (KES, increments of 5)
+                  Total Price ({currency}, increments of 5)
                 </Label>
                 <Input
                   id="total"
@@ -175,6 +180,24 @@ const ReceiptGenerator = () => {
                   onChange={(e) => setTotalPrice(e.target.value)}
                   className="border-bolt-green/20 focus:border-bolt-green focus:ring-bolt-green"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="currency" className="text-sm font-medium text-bolt-text">
+                  Currency
+                </Label>
+                <Select value={currency} onValueChange={(value) => setCurrency(value as CurrencyCode)}>
+                  <SelectTrigger
+                    id="currency"
+                    className="border-bolt-green/20 focus:border-bolt-green focus:ring-bolt-green"
+                  >
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="KES">KES - Kenya Shilling</SelectItem>
+                    <SelectItem value="TZS">TZS - Tanzania Shilling</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

@@ -7,6 +7,8 @@ interface TripData {
   driverLocation: string;
 }
 
+type CurrencyCode = 'KES' | 'TZS';
+
 interface ReceiptData {
   invoiceNumber: string;
   date: string;
@@ -17,13 +19,16 @@ interface ReceiptData {
   location: string;
   startLocation: string;
   tripFee: number;
+  bookingFee: number;
   vat: number;
   total: number;
   paymentMethod: string;
+  currency: CurrencyCode;
 }
 
 const PRICE_INCREMENT = 5;
 const MAX_PRICE_GAP_KES = 300;
+const TZS_BOOKING_FEE_RATE = 156.44 / 8000;
 
 // Kenyan names for random generation
 const kenyanNames = [
@@ -35,12 +40,22 @@ const kenyanNames = [
   'Esther Moraa', 'Patrick Gitau', 'Violet Kanini', 'George Kibaki', 'Helen Mwende'
 ];
 
-// Generate random invoice number in format: ########-KE####-###
-const generateInvoiceNumber = (): string => {
+const tanzanianMaleNames = [
+  'Antony Masaki', 'Juma Mwinyi', 'Hassan Mussa', 'Said Juma', 'Omari Ally',
+  'Bakari Hamisi', 'Yusuph Abdallah', 'Rajabu Salum', 'Kassim Mohamed', 'Mbaraka Selemani',
+  'Abdulrahman Issa', 'Ramadhani Shabani', 'Athuman Rashid', 'Daudi John', 'Emmanuel Mushi',
+  'Godfrey Massawe', 'Joseph Mrema', 'Michael Kessy', 'Daniel Shirima', 'Samwel Lema',
+  'Peter Makoye', 'Charles Mwakalinga', 'Francis Nyerere', 'Moses Malima', 'Richard Minja',
+  'Elibariki Sanga', 'Benedict Mapunda', 'Baraka Mtui', 'Erasto Mbise', 'Prosper Kimaro'
+];
+
+// Generate random invoice number in format: ########-KE####-### or ########-TZ####-###
+const generateInvoiceNumber = (currency: CurrencyCode): string => {
   const firstPart = Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
   const middlePart = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   const lastPart = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-  return `${firstPart}-KE${middlePart}-${lastPart}`;
+  const countryCode = currency === 'TZS' ? 'TZ' : 'KE';
+  return `${firstPart}-${countryCode}${middlePart}-${lastPart}`;
 };
 
 // Get random item from array
@@ -134,8 +149,9 @@ export const generateReceiptData = (
   totalPrice: number,
   trips: TripData[],
   recipientName: string,
+  currency: CurrencyCode = 'KES',
 ): ReceiptData[] => {
-  const tripFees = splitTotalPrice(totalPrice, numberOfTrips);
+  const receiptTotals = splitTotalPrice(totalPrice, numberOfTrips);
   
   return trips.map((trip, index) => {
     const tripDate = new Date(trip.date);
@@ -143,12 +159,16 @@ export const generateReceiptData = (
     tripDate.setHours(parseInt(hours), parseInt(minutes));
     
     const recipient = recipientName.trim();
-    const driverName = getRandomItem(kenyanNames.filter(name => name !== recipient));
+    const driverNames = currency === 'TZS' ? tanzanianMaleNames : kenyanNames;
+    const driverName = getRandomItem(driverNames.filter(name => name !== recipient));
     const startLocation = trip.destination.trim();
     const driverLocation = trip.driverLocation.trim();
+    const total = receiptTotals[index];
+    const bookingFee = currency === 'TZS' ? Number((total * TZS_BOOKING_FEE_RATE).toFixed(2)) : 0;
+    const tripFee = Number((total - bookingFee).toFixed(2));
     
     return {
-      invoiceNumber: generateInvoiceNumber(),
+      invoiceNumber: generateInvoiceNumber(currency),
       date: format(tripDate, 'yyyy-MM-dd'),
       time: format(tripDate, 'HH:mm'),
       recipient,
@@ -156,10 +176,12 @@ export const generateReceiptData = (
       driverCity: driverLocation,
       location: driverLocation,
       startLocation,
-      tripFee: tripFees[index],
+      tripFee,
+      bookingFee,
       vat: 0, // Always 0% as specified
-      total: tripFees[index],
-      paymentMethod: 'Cash'
+      total,
+      paymentMethod: 'Cash',
+      currency
     };
   });
 };

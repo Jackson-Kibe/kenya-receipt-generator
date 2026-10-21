@@ -1,5 +1,4 @@
 import jsPDF from 'jspdf';
-import boltLogo from '@/assets/bolt-logo.jpg';
 
 interface ReceiptData {
   invoiceNumber: string;
@@ -30,11 +29,11 @@ interface ReceiptTextOptions {
   align?: ReceiptTextAlign;
 }
 
-const BOLT_LOGO_URL = '/receipt-assets/bolt-logo.png';
-const PAYMENT_ICON_URL = '/receipt-assets/cash-icon.png';
+const BOLT_LOGO_URL = `${import.meta.env.BASE_URL}receipt-assets/bolt-logo.png`;
+const PAYMENT_ICON_URL = `${import.meta.env.BASE_URL}receipt-assets/cash-icon.png`;
 
-const CALIBRI_REGULAR_URL = '/fonts/calibri.ttf';
-const CALIBRI_BOLD_URL = '/fonts/calibrib.ttf';
+const CALIBRI_REGULAR_URL = `${import.meta.env.BASE_URL}fonts/calibri.ttf`;
+const CALIBRI_BOLD_URL = `${import.meta.env.BASE_URL}fonts/calibrib.ttf`;
 const CALIBRI_REGULAR_FILE = 'calibri.ttf';
 const CALIBRI_BOLD_FILE = 'calibrib.ttf';
 const CALIBRI_FONT_NAME = 'calibri';
